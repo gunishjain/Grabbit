@@ -17,11 +17,17 @@ class DownloadTask(private val request: DownloadRequest,private val httpClient: 
         withContext(Dispatchers.IO) {
 
 
-            // dummy code for downloading the file
+
             onStart()
 
             // use of HttpClient
             httpClient.connect()
+
+            TODO("For Pause and Resume need to use Range Header")
+
+            onCompleted()
+
+
         }
 
     }
