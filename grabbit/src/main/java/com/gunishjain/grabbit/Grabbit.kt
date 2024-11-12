@@ -1,6 +1,8 @@
 package com.gunishjain.grabbit
 
+import com.gunishjain.grabbit.internal.download.DownloadDispatcher
 import com.gunishjain.grabbit.internal.download.DownloadRequest
+import com.gunishjain.grabbit.internal.download.DownloadRequestQueue
 
 class Grabbit private constructor(private val config: DownloadConfig){
 
@@ -17,7 +19,7 @@ class Grabbit private constructor(private val config: DownloadConfig){
 
     }
 
-    //Need to create Req Queue and add requests to it with callbacks
+    private val requestQueue = DownloadRequestQueue(DownloadDispatcher(config.httpClient))
 
     fun enqueue(
         request: DownloadRequest,
@@ -26,34 +28,34 @@ class Grabbit private constructor(private val config: DownloadConfig){
         onPause: () -> Unit= {},
         onCompleted: () -> Unit = {},
         onError: (error: String) -> Unit = {_->}
-    ) {
+    ) : Int {
         request.onStart = onStart
         request.onProgress = onProgress
         request.onPause = onPause
         request.onCompleted = onCompleted
         request.onError = onError
 
-        //Add request to queue
+        return requestQueue.enqueue(request)
 
     }
     fun pause(id: Int){
-
+        requestQueue.pause(id)
     }
 
     fun resume(id: Int){
-
+        requestQueue.resume(id)
     }
 
     fun cancel(id: Int){
-
+        requestQueue.cancel(id)
     }
 
     fun cancel(tag: String){
-
+        requestQueue.cancel(tag)
     }
 
     fun cancelAll(){
-
+        requestQueue.cancelAll()
     }
 
 

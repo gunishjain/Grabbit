@@ -7,18 +7,17 @@ class DownloadRequestQueue(private val dispatcher: DownloadDispatcher) {
     fun enqueue(request: DownloadRequest) :Int {
 
         idRequestMap[request.downloadId] = request
+
         return dispatcher.enqueue(request)
 
     }
 
     fun pause(id: Int) {
-
-
-
+        dispatcher.pause(id)
     }
 
     fun resume(id: Int) {
-
+        dispatcher.resume(id)
     }
 
     fun cancel(id: Int) {
@@ -47,8 +46,5 @@ class DownloadRequestQueue(private val dispatcher: DownloadDispatcher) {
         dispatcher.cancelAll()
 
     }
-
-
-
 
 }

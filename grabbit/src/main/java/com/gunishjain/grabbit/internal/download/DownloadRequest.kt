@@ -18,7 +18,7 @@ class DownloadRequest private constructor(
 
     internal var totalBytes: Long = 0
     internal var downloadedBytes: Long = 0
-    internal lateinit var job: Job                                          //using lateintit since we are not initializing it here
+    internal lateinit var job: Job               //using lateintit since we are not initializing it here
     internal lateinit var onStart: () -> Unit
     internal lateinit var onProgress: (value: Int) -> Unit
     internal lateinit var onPause: () -> Unit
@@ -57,7 +57,7 @@ class DownloadRequest private constructor(
                 tag = tag,
                 dirPath = dirPath,
                 fileName = fileName,
-                downloadId = getUniqueDownloadId(),
+                downloadId = getUniqueDownloadId(url, dirPath, fileName),
                 readTimeout = readTimeOut,
                 connectTimeout = connectTimeOut
             )
