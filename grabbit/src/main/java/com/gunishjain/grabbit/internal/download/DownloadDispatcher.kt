@@ -6,11 +6,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 
 class DownloadDispatcher(private val httpClient: HttpClient) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private val downloadTasks = mutableMapOf<Int, DownloadTask>()
+    private val downloadTasks = ConcurrentHashMap<Int, DownloadTask>()
 
     private fun executeOnMain(block: () -> Unit){
         scope.launch {

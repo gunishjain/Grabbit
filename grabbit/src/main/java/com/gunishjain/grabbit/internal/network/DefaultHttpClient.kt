@@ -1,5 +1,6 @@
 package com.gunishjain.grabbit.internal.network
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -38,45 +39,54 @@ class DefaultHttpClient : HttpClient {
                 }
                 .build()
 
-            val response = okHttpClient.newCall(request).execute()
+           okHttpClient.newCall(request).execute().use { response ->
 
-            if (!response.isSuccessful) {
-                throw IOException("Unexpected response code: ${response.code}")
-            }
+               if (!response.isSuccessful) {
+                   throw IOException("Unexpected response code: ${response.code}")
+               }
 
-            // Get content length from header
-            val contentLength = response.header("Content-Length")?.toLong() ?: -1L
-            val totalBytes = if (contentLength != -1L) contentLength + startByte else -1L
+               // Get content length from header
+               val contentLength = response.header("Content-Length")?.toLong() ?: -1L
+               val totalBytes = if (contentLength != -1L) contentLength + startByte else -1L
 
 
-            // Create parent directories if they don't exist
-            file.parentFile?.mkdirs()
+               Log.d("Default HTTPCLIENT", "Total File Size: $totalBytes")
 
-            // Use response body to write to file
-            response.body?.let { body ->
-                val bufferedSink = file.sink(append = startByte > 0).buffer()
-                val source = body.source()
-                val buffer = Buffer()
-                var downloadedBytes = startByte
+               // Create parent directories if they don't exist
+               file.parentFile?.mkdirs()
 
-                while (true) {
-                    val read = source.read(buffer, 8192L) // Read chunks of 8KB
-                    if (read == -1L) break
+               // Use response body to write to file
+               response.body?.let { body ->
 
-                    bufferedSink.write(buffer, read)
-                    downloadedBytes += read
+                   Log.d("HTTPCLIENT",body.toString())
+                   val bufferedSink = file.sink(append = startByte > 0).buffer()
+                   val source = body.source()
+                   val buffer = Buffer()
+                   var downloadedBytes = startByte
 
-                    // Report progress
-                    onProgress(downloadedBytes, totalBytes)
-                }
+                   while (true) {
+                       val read = source.read(buffer, 8192L) // Read chunks of 8KB
+                       if (read == -1L) break
 
-                bufferedSink.close()
-                source.close()
-            } ?: throw IOException("Response body is null")
+                       bufferedSink.write(buffer, read)
+                       downloadedBytes += read
+
+                       // Report progress
+
+//                       Log.d("HTTPCLIENT",downloadedBytes.toString())
+
+                       onProgress(downloadedBytes, totalBytes)
+                   }
+
+                   bufferedSink.close()
+                   source.close()
+               } ?: throw IOException("Response body is null")
+           }
 
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            Log.e("HTTPCLEINT", "Error occurred: ${e.message}", e)
             throw IOException("Download failed: ${e.message}", e)
         }
 
