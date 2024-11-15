@@ -26,6 +26,7 @@ class DefaultHttpClient : HttpClient {
         file: File,
         startByte: Long,
         timeout: Int,
+        onHeadersReceived: (Map<String, String>) -> Boolean,
         onProgress: (Long, Long) -> Unit
     )  = withContext(Dispatchers.IO){
 
@@ -45,36 +46,39 @@ class DefaultHttpClient : HttpClient {
                    throw IOException("Unexpected response code: ${response.code}")
                }
 
+               // Extract and pass headers to callback
+               val headers = mutableMapOf<String, String>()
+               response.headers.forEach { (name, value) ->
+                   headers[name] = value
+               }
+
+               // Allow caller to validate headers
+               if (!onHeadersReceived(headers)) {
+                   throw IOException("Header validation failed")
+               }
+
                // Get content length from header
                val contentLength = response.header("Content-Length")?.toLong() ?: -1L
                val totalBytes = if (contentLength != -1L) contentLength + startByte else -1L
 
 
-               Log.d("Default HTTPCLIENT", "Total File Size: $totalBytes")
+               Log.d("DefaultHttpClient", "Resuming download from byte: $startByte")
 
-               // Create parent directories if they don't exist
-               file.parentFile?.mkdirs()
 
-               // Use response body to write to file
                response.body?.let { body ->
+                   file.parentFile?.mkdirs()
 
-                   Log.d("HTTPCLIENT",body.toString())
                    val bufferedSink = file.sink(append = startByte > 0).buffer()
                    val source = body.source()
                    val buffer = Buffer()
                    var downloadedBytes = startByte
 
                    while (true) {
-                       val read = source.read(buffer, 8192L) // Read chunks of 8KB
+                       val read = source.read(buffer, 8192L)
                        if (read == -1L) break
 
                        bufferedSink.write(buffer, read)
                        downloadedBytes += read
-
-                       // Report progress
-
-//                       Log.d("HTTPCLIENT",downloadedBytes.toString())
-
                        onProgress(downloadedBytes, totalBytes)
                    }
 
@@ -82,14 +86,12 @@ class DefaultHttpClient : HttpClient {
                    source.close()
                } ?: throw IOException("Response body is null")
            }
-
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e("HTTPCLEINT", "Error occurred: ${e.message}", e)
+            Log.e("DefaultHttpClient", "Error occurred: ${e.message}", e)
             throw IOException("Download failed: ${e.message}", e)
         }
-
     }
 
     override suspend fun getFileSize(url: String): Long = withContext(Dispatchers.IO) {
@@ -98,8 +100,9 @@ class DefaultHttpClient : HttpClient {
             .head() // Use HEAD request to get only headers
             .build()
 
-        val response = okHttpClient.newCall(request).execute()
-        response.header("Content-Length")?.toLong() ?: -1L
+        okHttpClient.newCall(request).execute().use { response ->
+            response.header("Content-Length")?.toLong() ?: -1L
+        }
     }
 
 }

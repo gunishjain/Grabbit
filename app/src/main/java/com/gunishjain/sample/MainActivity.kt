@@ -148,7 +148,7 @@ fun DownloadUI() {
                 startDownload(
                     url = "https://www.learningcontainer.com/download/sample-50-mb-pdf-file/?wpdmdl=3675&refresh=6721f942bd70b1730279746",
                     dirPath = downloadsDirectory,
-                    fileName = "himnashunew.pdf"
+                    fileName = "test.pdf"
                 )
             }) {
                 Text("Download")

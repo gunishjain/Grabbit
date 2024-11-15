@@ -9,6 +9,7 @@ interface HttpClient {
         file: File,
         startByte: Long = 0,
         timeout: Int = 30000,
+        onHeadersReceived: (Map<String, String>) -> Boolean = { true },
         onProgress: (downloadedBytes: Long, totalBytes: Long) -> Unit = { _, _ -> }
     )
 

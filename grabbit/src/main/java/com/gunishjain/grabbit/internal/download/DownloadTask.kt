@@ -3,15 +3,12 @@ package com.gunishjain.grabbit.internal.download
 import android.util.Log
 import com.gunishjain.grabbit.internal.network.HttpClient
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import okhttp3.internal.notify
-import okhttp3.internal.wait
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.coroutines.resume
 
 class DownloadTask(private val request: DownloadRequest,private val httpClient: HttpClient) {
 
@@ -21,6 +18,8 @@ class DownloadTask(private val request: DownloadRequest,private val httpClient: 
     private var file = File(request.dirPath, request.fileName)
     private var downloadedBytes = AtomicLong(0L)  // Use AtomicLong for thread safety
     private val pauseLock = Object()
+    private var eTag: String? = null  // Store ETag for consistency checking
+    private var lastModified: String? = null
 
     suspend fun run(
         onStart: () -> Unit = {},
@@ -42,16 +41,16 @@ class DownloadTask(private val request: DownloadRequest,private val httpClient: 
 
                 if (request.totalBytes <= 0) {
                     request.totalBytes = httpClient.getFileSize(request.url)
-                    Log.d("Download Task",request.totalBytes.toString())
+                    Log.d("Download Task", "Total bytes: ${request.totalBytes}")
                 }
 
                 while (!isCompleted) {
                     if (isPaused.get()) {
-                        Log.d("DownloadTask", "Download paused.")
+                        Log.d("DownloadTask", "Download paused at byte: ${downloadedBytes.get()}")
                         onPause()
                         waitForResume()
-                        Log.d("DownloadTask", "Download resumed.")
-                        continue  // Important: restart the loop after resume
+                        Log.d("DownloadTask", "Download resumed from byte: ${downloadedBytes.get()}")
+                        continue
                     }
 
                     try {
@@ -60,7 +59,12 @@ class DownloadTask(private val request: DownloadRequest,private val httpClient: 
                             url = request.url,
                             file = file,
                             startByte = downloadedBytes.get(),
-                            timeout = request.connectTimeout
+                            timeout = request.connectTimeout,
+                            onHeadersReceived = { headers ->
+                                eTag = headers["ETag"]
+                                lastModified = headers["Last-Modified"]
+                                true
+                            }
                         ) { currentBytes, totalBytes ->
                             downloadedBytes.set(currentBytes)
 
@@ -80,7 +84,7 @@ class DownloadTask(private val request: DownloadRequest,private val httpClient: 
 
                         isCompleted = true
                         onCompleted()
-                        Log.d("DownloadTask", "Download completed.")
+                        Log.d("DownloadTask", "Download completed successfully")
                         break
 
                     } catch (e: PauseException) {
@@ -109,7 +113,7 @@ class DownloadTask(private val request: DownloadRequest,private val httpClient: 
     }
 
     fun pauseDownload() {
-        Log.d("DownloadTask", "pauseDownload() called.")
+        Log.d("DownloadTask", "pauseDownload() called. Current bytes: ${downloadedBytes.get()}")
         isPaused.set(true)
     }
 
@@ -122,20 +126,17 @@ class DownloadTask(private val request: DownloadRequest,private val httpClient: 
     }
 
     private suspend fun waitForResume() {
-        suspendCancellableCoroutine<Unit> { continuation ->
-            synchronized(pauseLock) {
-                while (isPaused.get()) {
-                    try {
-                        Log.d("DownloadTask", "Waiting for resume.")
-                        pauseLock.wait()
-                    } catch (e: InterruptedException) {
-                        continuation.resume(Unit)
-                        return@synchronized
-                    }
-                }
-                continuation.resume(Unit)
-            }
+        withContext(Dispatchers.IO) {
+        while (isPaused.get()) {
+            Log.d("DownloadTask", "Waiting for resume.")
+            delay(100)  // Use delay in coroutines to suspend efficiently without blocking the thread
         }
+        }
+    }
+
+    fun cancelDownload() {
+        Log.d("DownloadTask", "cancelDownload() called at byte: ${downloadedBytes.get()}")
+        isCompleted = true
     }
 
     private class PauseException : Exception()
