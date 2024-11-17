@@ -14,7 +14,7 @@ class DownloadTask(private val request: DownloadRequest,private val httpClient: 
 
 
     private var isPaused = AtomicBoolean(false)
-    private var isCompleted = false
+    private var isCompleted = AtomicBoolean(false)
     private var file = File(request.dirPath, request.fileName)
     private var downloadedBytes = AtomicLong(0L)  // Use AtomicLong for thread safety
     private val pauseLock = Object()
@@ -44,11 +44,12 @@ class DownloadTask(private val request: DownloadRequest,private val httpClient: 
                     Log.d("Download Task", "Total bytes: ${request.totalBytes}")
                 }
 
-                while (!isCompleted) {
+                while (!isCompleted.get()) {
                     if (isPaused.get()) {
                         Log.d("DownloadTask", "Download paused at byte: ${downloadedBytes.get()}")
                         onPause()
                         waitForResume()
+                        if(isCompleted.get()) return@withContext
                         Log.d("DownloadTask", "Download resumed from byte: ${downloadedBytes.get()}")
                         continue
                     }
@@ -82,7 +83,7 @@ class DownloadTask(private val request: DownloadRequest,private val httpClient: 
                             }
                         }
 
-                        isCompleted = true
+                        isCompleted.set(true)
                         onCompleted()
                         Log.d("DownloadTask", "Download completed successfully")
                         break
@@ -127,16 +128,22 @@ class DownloadTask(private val request: DownloadRequest,private val httpClient: 
 
     private suspend fun waitForResume() {
         withContext(Dispatchers.IO) {
-        while (isPaused.get()) {
-            Log.d("DownloadTask", "Waiting for resume.")
-            delay(100)  // Use delay in coroutines to suspend efficiently without blocking the thread
-        }
+            synchronized(pauseLock) {
+                while (isPaused.get() && !isCompleted.get()) {
+                    Log.d("DownloadTask", "Waiting for resume.")
+                    pauseLock.wait()  // Suspend until resumeDownload is called
+                }
+            }
         }
     }
 
     fun cancelDownload() {
         Log.d("DownloadTask", "cancelDownload() called at byte: ${downloadedBytes.get()}")
-        isCompleted = true
+        isCompleted.set(true)
+        isPaused.set(false)  // Unpause if canceled during a pause
+        synchronized(pauseLock) {
+            pauseLock.notify()  // Release any waiters
+        }
     }
 
     private class PauseException : Exception()

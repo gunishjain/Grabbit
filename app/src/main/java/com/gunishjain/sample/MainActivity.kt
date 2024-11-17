@@ -66,7 +66,7 @@ fun DownloadUI() {
             },
             onCompleted = {
                 isDownloading = false
-                if (File(downloadsDirectory, "lmao.pdf").exists()) {
+                if (File(downloadsDirectory, "crackgoodoffers.pdf").exists()) {
                     Log.d("Compose", "File found after download")
                 } else {
                     Log.d("Compose", "File  Not found after download",)
@@ -148,7 +148,7 @@ fun DownloadUI() {
                 startDownload(
                     url = "https://www.learningcontainer.com/download/sample-50-mb-pdf-file/?wpdmdl=3675&refresh=6721f942bd70b1730279746",
                     dirPath = downloadsDirectory,
-                    fileName = "test.pdf"
+                    fileName = "crackgoodoffers.pdf"
                 )
             }) {
                 Text("Download")
