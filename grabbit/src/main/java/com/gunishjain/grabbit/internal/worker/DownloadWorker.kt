@@ -15,7 +15,18 @@ class DownloadWorker(
     //Define Notification Manager here
 
     override suspend fun doWork(): Result {
-        TODO("Not yet implemented")
+
+        val downloadId = inputData.getInt("downloadId", -1) // we will get input data from Download Manager
+        if (downloadId == -1) return Result.failure()
+
+
+
+        //call Notification Manager and implement Download Task Here
+
+
+
+        return Result.success()
+
     }
 
 
