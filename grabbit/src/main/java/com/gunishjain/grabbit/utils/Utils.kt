@@ -28,3 +28,7 @@ fun getUniqueDownloadId(url: String, dirPath: String, fileName: String): Int {
     return hex.toString().hashCode()
 
 }
+
+enum class DownloadStatus {
+    PENDING, DOWNLOADING, PAUSED, COMPLETED, ERROR
+}

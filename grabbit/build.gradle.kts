@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -43,4 +44,12 @@ dependencies {
 
     implementation(libs.retrofit)
     implementation(libs.okhttp)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+
+    // WorkManager
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
 }
