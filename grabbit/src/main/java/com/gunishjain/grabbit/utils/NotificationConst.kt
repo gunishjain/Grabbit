@@ -8,6 +8,7 @@ object NotificationConst {
     const val DEFAULT_VALUE_NOTIFICATION_ENABLED = false
     const val KEY_NOTIFICATION_ID = "key_notification_id"
     const val DEFAULT_VALUE_NOTIFICATION_CHANNEL_DESCRIPTION = "Notify File Download Status"
+    const val DEFAULT_VALUE_NOTIFICATION_CHANNEL_IMPORTANCE = 2
 
 
 
