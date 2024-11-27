@@ -30,5 +30,5 @@ fun getUniqueDownloadId(url: String, dirPath: String, fileName: String): Int {
 }
 
 enum class DownloadStatus {
-    PENDING, DOWNLOADING, PAUSED, COMPLETED, ERROR
+    STARTED, PENDING, DOWNLOADING, PAUSED, COMPLETED, FAILED, DEFAULT
 }

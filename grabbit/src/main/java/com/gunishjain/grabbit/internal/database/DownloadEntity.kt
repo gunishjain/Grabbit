@@ -13,7 +13,10 @@ data class DownloadEntity(
     val dirPath: String,
     val totalBytes: Long,
     val downloadedBytes: Long = 0,
-    val status: DownloadStatus = DownloadStatus.PENDING,
+    val status: String = DownloadStatus.DEFAULT.toString(),
     val tag: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
-)
+    val createdAt: Long = System.currentTimeMillis(),
+    var speedInBytePerMs: Float = 0f,
+    var eTag: String = "",
+
+    )
