@@ -15,8 +15,9 @@ data class DownloadEntity(
     val downloadedBytes: Long = 0,
     val status: String = DownloadStatus.DEFAULT.toString(),
     val tag: String? = null,
-    val createdAt: Long = System.currentTimeMillis(),
     var speedInBytePerMs: Float = 0f,
     var eTag: String = "",
+    var lastModified: Long = 0,
+    var workerID: String = "",
 
     )

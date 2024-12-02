@@ -15,5 +15,5 @@ internal fun DownloadEntity.toDownloadModel() =
         progress = if (totalBytes.toInt() != 0) ((downloadedBytes * 100) / totalBytes).toInt() else 0,
         speedInBytePerMs = speedInBytePerMs,
         eTag = eTag,
-
+        lastModified = lastModified,
     )

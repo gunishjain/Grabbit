@@ -1,4 +1,4 @@
-package com.gunishjain.grabbit.internal
+package com.gunishjain.grabbit.internal.notifications
 
 import com.gunishjain.grabbit.utils.NotificationConst
 

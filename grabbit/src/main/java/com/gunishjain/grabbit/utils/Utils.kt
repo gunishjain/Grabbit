@@ -1,10 +1,14 @@
 package com.gunishjain.grabbit.utils
 
+import com.gunishjain.grabbit.internal.download.DownloadRequest
+import com.gunishjain.grabbit.internal.notifications.NotificationConfig
+import kotlinx.serialization.encodeToString
 import java.io.File
 import java.io.UnsupportedEncodingException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import kotlin.experimental.and
+import kotlinx.serialization.json.Json
 
 fun getUniqueDownloadId(url: String, dirPath: String, fileName: String): Int {
 
@@ -30,5 +34,13 @@ fun getUniqueDownloadId(url: String, dirPath: String, fileName: String): Int {
 }
 
 enum class DownloadStatus {
-    STARTED, PENDING, DOWNLOADING, PAUSED, COMPLETED, FAILED, DEFAULT
+    QUEUED, STARTED, DOWNLOADING, PAUSED, COMPLETED, FAILED, DEFAULT
+}
+
+fun DownloadRequest.toJson(): String {
+    return Json.encodeToString(this)
+}
+
+fun NotificationConfig.toJson(): String {
+    return Json.encodeToString(this)
 }

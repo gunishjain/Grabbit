@@ -13,7 +13,6 @@ data class DownloadModel(
     val progress: Int,
     val eTag: String,
     val speedInBytePerMs: Float,
-
-
+    val lastModified: Long,
 
     )
